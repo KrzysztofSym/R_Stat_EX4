@@ -1,0 +1,310 @@
+---
+title: "ADPS 2025Z --- Laboratorium 4"
+author: "Konrad Jędrzejewski"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+  html_notebook: default
+---
+
+```{r, echo=FALSE}
+pdf.options(encoding='ISOLatin2')
+```
+
+# Przykład 1 – analiza wariancji
+
+W plikach grX.txt, gdzie X jest numerem od 1 do 5, znajdują się dane dotyczące wzrostu [kg] i wagi [cm] studentów z pięciu grup. Wczytaj dane z pierwszego pliku i obejrzyj je:
+```{r}
+gr1 = read.csv('gr1.txt')
+```
+
+Wczytaj kolumny "Wzrost" z poszczególnych plików:
+```{r}
+x1 = read.csv('gr1.txt')$Wzrost
+x2 = read.csv('gr2.txt')$Wzrost
+x3 = read.csv('gr3.txt')$Wzrost
+x4 = read.csv('gr4.txt')$Wzrost
+x5 = read.csv('gr5.txt')$Wzrost
+```
+
+Wyświetl ich wykres pudełkowy:
+```{r}
+boxplot(x1, x2, x3, x4, x5)
+grid()
+```
+
+Przygotuj dane na potrzeby funkcji aov():
+```{r}
+dane_anova = data.frame( dane = c(x1, x2, x3, x4, x5),
+          proba = rep( c('x1', 'x2', 'x3', 'x4', 'x5'), 
+                  times = c(length(x1), length(x2), length(x3), length(x4), length(x5))) )
+```
+
+Przeprowadź analizę wariancji przy założeniu normalności rozkładów:
+```{r}
+aov_res = aov(dane~proba, data = dane_anova)
+summary(aov_res)
+```
+
+Przeprowadź analizę wariancji bez zakładania normalności rozkładów korzystając z testu Kruskala-Wallisa:
+```{r}
+kruskal.test(dane~proba, dane_anova)
+```
+
+Korzystając z metody Tukeya sprawdź, czy dla którejś z prób jej wartość średnia odbiega od wartości średnich w pozostałych próbach:
+```{r}
+Tukey_res = TukeyHSD(aov_res)
+print(Tukey_res)
+plot(Tukey_res)
+```
+
+Przeprowadź analizę za pomocą metody Bonferroniego:
+```{r}
+pairwise_bonf = pairwise.t.test(dane_anova$dane, dane_anova$proba, p.adj = 'bonf')
+pairwise_bonf
+```
+
+**Powtórz testy gdy zwiększymy wzrost wszystkich studentów w grupie drugiej o 2 i 5 cm.**
+
+**2 cm**
+```{r}
+  delta_mean = 2
+  
+  x2 = read.csv('gr2.txt')$Wzrost + delta_mean
+  
+  boxplot(x1, x2, x3, x4, x5)
+  grid()
+  
+  dane_anova = data.frame( dane = c(x1, x2, x3, x4, x5), 
+            proba = rep( c('x1', 'x2', 'x3', 'x4', 'x5'), 
+            times = c(length(x1), length(x2),length(x3), length(x4), length(x5))) )
+  
+  aov_res = aov(dane~proba, data = dane_anova)
+  summary(aov_res)
+  
+  kruskal.test(dane~proba, dane_anova)
+  
+  Tukey_res = TukeyHSD(aov_res)
+  print(Tukey_res)
+  plot(Tukey_res)
+  
+  pairwaise_bonf = pairwise.t.test(dane_anova$dane, dane_anova$proba, p.adj = 'bonf')
+  pairwaise_bonf
+```
+
+**5 cm**
+```{r}
+  delta_mean = 5
+  
+  x2 = read.csv('gr2.txt')$Wzrost + delta_mean
+  
+  boxplot(x1, x2, x3, x4, x5)
+  grid()
+  
+  dane_anova = data.frame( dane = c(x1, x2, x3, x4, x5), 
+            proba = rep( c('x1', 'x2', 'x3', 'x4', 'x5'), 
+            times = c(length(x1), length(x2),length(x3), length(x4), length(x5))) )
+  
+  aov_res = aov(dane~proba, data = dane_anova)
+  summary(aov_res)
+
+  kruskal.test(dane~proba, dane_anova)
+
+  Tukey_res = TukeyHSD(aov_res)
+  print(Tukey_res)
+  plot(Tukey_res)
+  
+  pairwaise_bonf = pairwise.t.test(dane_anova$dane, dane_anova$proba, p.adj = 'bonf')
+  pairwaise_bonf
+```
+
+# Przykład 2 – regresja liniowa
+
+Wczytaj kolumny „Wzrost” i  „Waga” z poszczególnych plików:
+```{r}
+
+x1 = read.csv('gr1.txt')$Wzrost
+x2 = read.csv('gr2.txt')$Wzrost
+x3 = read.csv('gr3.txt')$Wzrost
+x4 = read.csv('gr4.txt')$Wzrost
+x5 = read.csv('gr5.txt')$Wzrost
+
+y1 = read.csv('gr1.txt')$Waga
+y2 = read.csv('gr2.txt')$Waga
+y3 = read.csv('gr3.txt')$Waga
+y4 = read.csv('gr4.txt')$Waga
+y5 = read.csv('gr5.txt')$Waga
+```
+
+Połącz dane dot. wzrostu i wagi wszystkich studentów:
+```{r}
+x = c(x1, x2, x3, x4, x5)
+y = c(y1, y2, y3, y4, y5)
+```
+
+Narysuj wykres z danymi dot. wzrostu i wagi:
+```{r}
+plot(x, y, xlab = 'Wzrost', ylab = 'Waga')
+grid()
+```
+
+Wyznacz parametry prostej regresji $y = \beta_1 x + \beta_0$ i współczynnik determinacji $R^2$:
+```{r}
+beta1_est = (mean(x*y) - mean(x)*mean(y)) / (mean(x^2) - (mean(x))^2)
+beta0_est = mean(y) - beta1_est*mean(x)
+y_est = beta1_est*x + beta0_est
+R2 = 1 - sum((y - y_est)^2)/sum((y - mean(y))^2)
+```
+Prosta regresji $y = `r round(beta1_est, 4)`x `r round(beta0_est, 4)`$.
+
+Współczynnik $R^2 = `r round(R2, 4)`$.
+
+Nanieś na rysunek prostą regresji:
+```{r}
+plot(x, y, xlab = 'Wzrost', ylab = 'Waga')
+arg = c(min(x), max(x))
+out = beta1_est*arg + beta0_est 
+lines(arg, out, col = 'red')
+grid()
+```
+
+To samo wykonaj za pomocą funkcji lm:
+```{r}
+lm_res = lm(y~x)
+summary(lm_res)
+R2 = summary(lm_res)$r.squared
+plot(x, y, xlab = 'Wzrost', ylab = 'Waga')
+abline(lm_res, col='red')
+grid()
+```
+
+Prosta regresji $y = `r round(coef(lm_res)[2], 4)`x `r round(coef(lm_res)[1], 4)`$.
+
+Współczynnik $R^2 = `r round(R2, 4)`$.
+
+### Zależność kwadratowa wzrostu od wagi: $y = \beta_1 x^2 + \beta_0$
+
+Metoda regresji liniowej za pomocą funkcji lm:
+```{r}
+lm_res2 = lm(y~I(x^2))
+summary(lm_res2)
+R22 = summary(lm_res2)$r.squared
+
+plot(x, y, xlab = 'Wzrost', ylab = 'Waga')
+arg = seq(min(x), max(x), by = 1)
+y_est = coef(lm_res)[2]*arg + coef(lm_res)[1]
+y_est2 = coef(lm_res2)[2]*arg^2 + coef(lm_res2)[1]
+lines(arg, y_est, col = 'red')
+lines(arg, y_est2, col = 'blue')
+grid()
+legend('topleft', c('liniowa', 'kwadratowa'), col = c('red', 'blue'), lwd = 1)
+```
+
+Regresja kwadratowa: $y = `r round(coef(lm_res2)[2], 4)`x^2 + `r round(coef(lm_res2)[1], 4)`$.
+
+Współczynnik $R^2 = `r round(R22, 4)`$.
+
+# Przykład 3 – predykcja
+
+Oblicz prognozowaną wartość wagi studenta przy wzroście 184 cm:
+```{r}
+x_new = 184
+y_new = beta1_est*x_new + beta0_est
+```
+lub
+```{r}
+y_new = coef(lm_res)[2]*x_new + coef(lm_res)[1] 
+```
+Prognozowana waga studenta przy wzroście 184 cm wynosi `r round(y_new,2)`.
+
+Oszacuj odchylenie standardowe błędu prognozy wagi studenta o wzroście 184 cm:
+```{r}
+n = length(x)
+y_est = coef(lm_res)[2]*x + coef(lm_res)[1]
+s2 = 1/(n - 2)*sum((y - y_est)^2)
+s2_y_new = s2*( 1 + 1/n + (mean(x) - x_new)^2/(n*(mean(x^2) - mean(x)^2)) )
+s_y_new = sqrt(s2_y_new)
+```
+Odchylenie standardowe błędu prognozy wagi studenta o wzroście 184 cm wynosi `r round(s_y_new,2)`.
+
+Prognozowana wartość wagi studenta i odchylenie standardowe za pomocą funkcji R predict():
+```{r}
+pred_res = predict(lm_res, data.frame(x = x_new), se=T)
+pred_res$fit
+s_y_new2 = sqrt(pred_res$se.fit^2 + pred_res$residual.scale^2)
+```
+Prognozowana waga studenta przy wzroście 184 cm wynosi `r round(pred_res$fit,2)`, a odchylenie standardowe `r round(s_y_new2,2)`.
+
+# Przykład 4 –  regresja, przypadek wielowymiarowy
+
+Pomocnicza funkcja wczytująca kursy zamknięcia z plików z danymi ze storny https://stooq.pl/:
+```{r}
+read_kursy = function(Symbol, dateStart, dateEnd) {
+  webLink = paste0('https://stooq.pl/q/d/l/?s=', Symbol, '&i=d')
+  fileName = paste0(Symbol, '.csv')
+  # if(!file.exists(fileName)) {
+    download.file(webLink, fileName)
+  # }
+  df_Symbol = read.csv(fileName)
+  df_Symbol$Data = as.Date(df_Symbol$Data)
+  df_Symbol = df_Symbol[which(df_Symbol$Data >= dateStart & df_Symbol$Data <= dateEnd),]
+  df_Symbol = subset(df_Symbol, select = c(Data, Zamkniecie))
+  names(df_Symbol) = c('Data', Symbol)
+df_Symbol }
+```
+
+Narysuj wykres kursów spółki ORLEN (PKN) i kursu USD w zależności od daty dla danych z ostatnich sześciu miesięcy.
+```{r}
+dateStart = '2025-06-01'
+dateEnd = '2025-11-30'
+
+Symbol = 'PKN'
+df_Symbol = read_kursy(Symbol, dateStart, dateEnd)
+  plot(PKN ~ Data, df_Symbol, type = 'l', col = 'blue',
+       xlab = 'Data', ylab = 'Kurs  [zł]', main = Symbol )
+  grid()
+  
+Symbol = 'USDPLN'
+df_Symbol = read_kursy(Symbol, dateStart, dateEnd)
+  plot(USDPLN ~ Data, df_Symbol, type = 'l', col = 'blue',
+       xlab = 'Data', ylab = 'Kurs  [zł]', main = Symbol )
+  grid()
+```
+
+Wyznacz parametry modelu regresji liniowej dla zależności kursu zamknięcia indeksu WIG20 od kursów zamknięcia spółek ASSECO (ASE) KGHM (KGH), ORLEN (PKN), PKOBP (PKO) dla danych z ostatnich sześciu miesięcy.
+
+Pobieranie plików z danymi:
+```{r}
+dateStart = '2025-06-01'
+dateEnd = '2025-11-30'
+
+df_WIG20 = read_kursy('WIG20', dateStart, dateEnd)
+df_ASE = read_kursy('ASE', dateStart, dateEnd)
+df_KGH = read_kursy('KGH', dateStart, dateEnd)
+df_PKN = read_kursy('PKN', dateStart, dateEnd)
+df_PKO = read_kursy('PKO', dateStart, dateEnd)
+```
+Metoda regresji liniowej za pomocą funkcji lm:
+```{r}
+
+df_Dane = merge(df_WIG20, df_ASE, by = 'Data')
+df_Dane = merge(df_Dane, df_KGH, by = 'Data')
+df_Dane = merge(df_Dane, df_PKN, by = 'Data')
+df_Dane = merge(df_Dane, df_PKO, by = 'Data')
+
+lm_res = lm(WIG20 ~ ASE + KGH + PKN + PKO, data = df_Dane)
+summary(lm_res)
+```
+
+Wartości estymat parametrów modelu możemy też obliczyć na podstawie wzoru:
+$$ 
+\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^T\boldsymbol{X})^{-1}\boldsymbol{X}^T\boldsymbol{Y}.
+$$
+Poniżej implementacja wzoru w R:
+```{r}
+X = with(df_Dane, cbind(rep(1, length(WIG20)), ASE, KGH, PKN, PKO))
+Y = df_Dane$WIG20
+beta_est = solve(t(X)%*%X)%*%t(X)%*%Y
+beta_est
+```

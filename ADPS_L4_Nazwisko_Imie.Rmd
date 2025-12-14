@@ -1,0 +1,70 @@
+---
+title: "ADPS 2025Z --- Laboratorium 4 - rozwiązania"
+author: "Imię i Nazwisko"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document: default
+  html_notebook: default
+---
+
+```{r, echo=FALSE}
+pdf.options(encoding='ISOLatin2')
+```
+
+# Zadanie 1 (1,5 pkt)
+
+## Treść zadania 
+
+Dla kursu zamknięcia dolara amerykańskiego (USDPLN):
+
+* Narysuj wykresy pudełkowe ilustrujące rozkłady kursu dla ostatnich sześciu miesięcy (osobno dla każdego miesiąca od czerwca 2025 do listopada 2025).
+
+* Korzystając z metody analizy wariancji, zweryfikuj hipotezę o równości wartości średnich kursów w  ostatnich sześciu miesiącach. Skomentuj uzyskane wyniki.
+
+* Przeprowadź analizę odstępstw od średniej metodami Tukeya i Bonferroniego. Skomentuj uzyskane wyniki.
+
+* Przeprowadź testy prównujące kursy w ostatnich sześciu miesiącach, bez zakładania normalności ich rozkładów. Skomentuj uzyskane wyniki. 
+
+
+## Rozwiązanie
+
+Tu umieść swoje rozwiązanie.
+
+***
+
+# Zadanie 2 (2 pkt)
+
+## Treść zadania
+
+Dla danych z ostatnich trzech miesięcy (od września do listopada 2025) korzystając z regresji liniowej wyznacz zależności:
+
+* kursu EURPLN od kursów USDPLN, GBPPLN, AUDPLN, JPYPLN,
+
+* kursu KGHM (KGH) od kursów EURPLN, USDPLN, GBPPLN. AUDPLN, JPYPLN. 
+
+Oceń istotność poszczególnych zmiennych objaśniających w tak skonstruowanych modelach.
+
+## Rozwiązanie
+
+Tu umieść swoje rozwiązanie.
+
+***
+
+# Zadanie 3 (1,5 pkt.)
+
+## Treść zadania
+
+W pliku sprzedaz.txt znajdują się dane dotyczące wydatków na reklamę pewnej firmy (w tys. zł) i wartości sprzedaży jej produktów (w mln zł) w poszczególnych kwartałach.
+
+* Metodą regresji liniowej wyznacz zależność pomiędzy wartością sprzedaży a wydatkami na reklamę. Na jednym wykresie narysuj punkty odpowiadające danym oraz prostą regresji. 
+
+* Oblicz prognozowane wartości sprzedaży, jeśli wydatki na reklamę będą wynosiły: 300, 500, 700 tys. zł. Oszacuj odchylenie standardowe błędu z jakim wyznaczono prognozowane wartości sprzedaży dla poszczególnych wartości wydatków na reklamę.
+
+* Dla danych z pliku sprzedaz.txt zbadaj czy lepszym modelem zależności między wartością wydatków na reklamę (w tys. zł) a wartością sprzedaży (w mln zł) byłaby zależność kwadratowa. Porównaj wartości współczynnika determinacji $R^2$ dla obu modeli. Nanieś odpowiednią linię przedstawiającą tę zależność na rysunek z danymi oraz prostą regresji wyznaczoną w poprzednim punkcie.
+
+## Rozwiązanie
+
+Tu umieść swoje rozwiązanie
+
+***
