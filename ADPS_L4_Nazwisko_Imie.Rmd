@@ -1,6 +1,6 @@
 ---
 title: "ADPS 2025Z --- Laboratorium 4 - rozwiązania"
-author: "Imię i Nazwisko"
+author: "Krzysztof Symoniuk"
 output:
   pdf_document: 
     latex_engine: xelatex
@@ -29,8 +29,32 @@ Dla kursu zamknięcia dolara amerykańskiego (USDPLN):
 
 ## Rozwiązanie
 
-Tu umieść swoje rozwiązanie.
+```{r}
+read_kursy = function(Symbol, dateStart, dateEnd) {
+webLink = paste0('https://stooq.pl/q/d/l/?s=', Symbol, '&i=d')
+fileName = paste0(Symbol, '.csv')
+if(!file.exists(fileName)) {
+download.file(webLink, fileName)
+ }
+df_Symbol = read.csv(fileName)
+df_Symbol$Data = as.Date(df_Symbol$Data)
+df_Symbol = df_Symbol[which(df_Symbol$Data >= dateStart & df_Symbol$Data <= dateEnd),]
+df_Symbol = subset(df_Symbol, select = c(Data, Zamkniecie))
+names(df_Symbol) = c('Data', Symbol)
+df_Symbol }
 
+dateStart = '2025-06-01'
+dateEnd = '2025-11-30'
+
+Symbol = 'USDPLN'
+df_Symbol = read_kursy(Symbol, dateStart, dateEnd); df_Symbol
+plot(USDPLN ~ Data, df_Symbol, type = 'l', col = 'blue',
+xlab = 'Data', ylab = 'Kurs [zł]', main = Symbol )
+grid()
+df_Symbol_6 = read_kursy(Symbol, '2025-06-01', '2025-06-30');
+boxplot(x1, x2, x3, x4, x5)
+grid()
+```
 ***
 
 # Zadanie 2 (2 pkt)
