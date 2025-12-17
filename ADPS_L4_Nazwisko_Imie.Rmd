@@ -48,13 +48,51 @@ dateEnd = '2025-11-30'
 
 Symbol = 'USDPLN'
 df_Symbol = read_kursy(Symbol, dateStart, dateEnd); df_Symbol
-plot(USDPLN ~ Data, df_Symbol, type = 'l', col = 'blue',
-xlab = 'Data', ylab = 'Kurs [zł]', main = Symbol )
+
+df_cz = read_kursy(Symbol, '2025-06-01', '2025-06-30')$USDPLN
+df_lip = read_kursy(Symbol, '2025-07-01', '2025-07-31')$USDPLN
+df_sie = read_kursy(Symbol, '2025-08-01', '2025-08-31')$USDPLN
+df_wrz = read_kursy(Symbol, '2025-09-01', '2025-09-30')$USDPLN
+df_paz = read_kursy(Symbol, '2025-10-01', '2025-10-31')$USDPLN
+df_lis = read_kursy(Symbol, '2025-11-01', '2025-11-30')$USDPLN
+lis_mies = c("czer", "lip", "sier", "wrz", "paz", "lis")
+boxplot(df_cz, df_lip, df_sie, df_wrz, df_paz, df_lis, names=lis_mies)
 grid()
-df_Symbol_6 = read_kursy(Symbol, '2025-06-01', '2025-06-30');
-boxplot(x1, x2, x3, x4, x5)
-grid()
+
+dane_anova = data.frame( dane = c(df_cz, df_lip, df_sie, df_wrz, df_paz, df_lis),
+proba = rep( c('df_cz', 'df_lip', 'df_sie', 'df_wrz', 'df_paz', 'df_lis'),
+times = c(length(df_cz), length(df_lip), length(df_sie), length(df_wrz), length(df_paz), length(df_lis))) )
+
+aov_res = aov(dane~proba, data = dane_anova)
+summary(aov_res)
 ```
+Ponieważ wartość p (9,7e-11) jest mniejsza niż 0.05, odrzucamy hipotezę zerową (H0), co oznacza, że istnieje statystycznie istotna różnica w średnich kursach USD/PLN między miesiącami.
+```{r}
+Tukey_res = TukeyHSD(aov_res)
+print(Tukey_res)
+```
+Istnieje istotna statystycznie różnica między średnimi kursami w czerwcu a wszystkimi innymi miesiącami (lipiec, sierpień, wrzesień, październik, listopad).
+
+Wrzesień wykazuje istotną różnicę z czerwcem, ale także z listopadem i sierpniem.
+
+Październik ma bardzo podobne średnie do innych miesięcy, a różnice są nieistotne statystycznie w porównaniu do lipca, sierpnia, listopada.
+
+Lipiec, sierpień i listopad nie różnią się w sposób istotny od siebie nawzajem w kontekście średnich kursów.
+
+```{r}
+pairwise_bonf = pairwise.t.test(dane_anova$dane, dane_anova$proba, p.adj = 'bonf')
+pairwise_bonf
+```
+Czerwiec ma statystycznie istotnie różniące się średnie kursy w porównaniu do wszystkich innych miesięcy.
+
+Lipiec, sierpień, październik i listopad nie różnią się istotnie między sobą w kwestii średnich kursów USD/PLN.
+
+Wrzesień jest jednym miesiącem, który różni się istotnie od kilku innych miesięcy (zwłaszcza od czerwca i listopada).
+
+```{r}
+kruskal.test(dane~proba, dane_anova)
+```
+Na podstawie testu Kruskala-Wallisa istnieją istotne różnice między grupami (p < 0.05), co oznacza, że rozkłady w tych grupach się różnią.
 ***
 
 # Zadanie 2 (2 pkt)
@@ -71,8 +109,76 @@ Oceń istotność poszczególnych zmiennych objaśniających w tak skonstruowany
 
 ## Rozwiązanie
 
-Tu umieść swoje rozwiązanie.
+```{r}
+read_kursy = function(Symbol, dateStart, dateEnd) {
+webLink = paste0('https://stooq.pl/q/d/l/?s=', Symbol, '&i=d')
+fileName = paste0(Symbol, '.csv')
+# if(!file.exists(fileName)) {
+download.file(webLink, fileName)
+# }
+df_Symbol = read.csv(fileName)
+df_Symbol$Data = as.Date(df_Symbol$Data)
+df_Symbol = df_Symbol[which(df_Symbol$Data >= dateStart & df_Symbol$Data <= dateEnd),]
+df_Symbol = subset(df_Symbol, select = c(Data, Zamkniecie))
+names(df_Symbol) = c('Data', Symbol)
+df_Symbol }
 
+#* kursu EURPLN od kursów USDPLN, GBPPLN, AUDPLN, JPYPLN,
+#* kursu KGHM (KGH) od kursów EURPLN, USDPLN, GBPPLN. AUDPLN, JPYPLN. 
+dateStart = '2025-09-01'
+dateEnd = '2025-11-30'
+df_EURPLN = read_kursy('EURPLN', dateStart, dateEnd)
+df_USDPLN = read_kursy('USDPLN', dateStart, dateEnd)
+df_GBPPLN = read_kursy('GBPPLN', dateStart, dateEnd)
+df_AUDPLN = read_kursy('AUDPLN', dateStart, dateEnd)
+df_JPYPLN = read_kursy('JPYPLN', dateStart, dateEnd)
+#Metoda regresji liniowej za pomocą funkcji lm:
+df_Dane = merge(df_EURPLN, df_USDPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_GBPPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_AUDPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_JPYPLN, by = 'Data')
+
+lm_res = lm(EURPLN ~ USDPLN + GBPPLN + AUDPLN + JPYPLN, data = df_Dane)
+summary(lm_res)
+```
+USDPLN (p = 4.82e-05) – Bardzo mała wartość p (mniejsza niż 0.05), co wskazuje, że zmienna USDPLN jest istotnie statystycznie w modelu. Oznacza to, że kurs USDPLN ma istotny wpływ na kurs EURPLN.
+
+GBPPLN (p = 0.0693) – Wartość p jest nieco większa niż 0.05, przy alfa 0.05 jest nieistotna w modelu.
+
+AUDPLN (p = 0.0167) – Wartość p jest mniejsza niż 0.05, co oznacza, że zmienna AUDPLN jest statystycznie istotna w modelu. Kurs AUDPLN ma istotny wpływ na kurs EURPLN.
+
+JPYPLN (p = 1.64e-06) – Bardzo mała wartość p, więc zmienna JPYPLN jest wysoce istotna w modelu i ma znaczący wpływ na kurs EURPLN.
+
+```{r}
+#* kursu KGHM (KGH) od kursów EURPLN, USDPLN, GBPPLN. AUDPLN, JPYPLN. 
+
+df_KGH = read_kursy('KGH', dateStart, dateEnd)
+
+#Metoda regresji liniowej za pomocą funkcji lm:
+df_Dane = merge(df_KGH, df_EURPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_USDPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_GBPPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_AUDPLN, by = 'Data')
+df_Dane = merge(df_Dane, df_JPYPLN, by = 'Data')
+
+lm_res = lm(KGH ~ EURPLN + USDPLN + GBPPLN + AUDPLN + JPYPLN, data = df_Dane)
+summary(lm_res)
+```
+Istotne zmienne:
+
+USDPLN i JPYPLN mają statystycznie istotny wpływ na zmienną zależną KGH. Wzrost kursu USDPLN powoduje wzrost KGH, a wzrost kursu JPYPLN powoduje spadek KGH.
+
+Brak istotnych zmiennych:
+
+EURPLN, GBPPLN, i AUDPLN nie mają istotnego wpływu na KGH w tym modelu, ponieważ ich wartości p są większe niż 0.05. Oznacza to, że zmienne te nie wnoszą istotnych informacji o zmienności KGH po uwzględnieniu innych zmiennych.
+
+Jakość modelu:
+
+Model jest dobrze dopasowany do danych, ponieważ R-squared wynosi 77.33%, co oznacza, że zmienne objaśniające wyjaśniają dużą część zmienności KGH.
+
+Wnioski praktyczne:
+
+W oparciu o wyniki regresji, zmiennymi mającymi największy wpływ na KGH są kursy USDPLN i JPYPLN. Warto zatem szczególnie monitorować te kursy, jeśli chcemy przewidywać zmiany KGH. Pozostałe zmienne (EURPLN, GBPPLN, AUDPLN) nie mają istotnego wpływu na kurs akcji KGH w tym modelu.
 ***
 
 # Zadanie 3 (1,5 pkt.)
