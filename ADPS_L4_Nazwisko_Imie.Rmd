@@ -195,6 +195,42 @@ W pliku sprzedaz.txt znajdują się dane dotyczące wydatków na reklamę pewnej
 
 ## Rozwiązanie
 
-Tu umieść swoje rozwiązanie
+```{r}
+x = read.csv('sprzedaz.txt')$Advert; x
+y = read.csv('sprzedaz.txt')$Income; y
+beta1_est = (mean(x*y) - mean(x)*mean(y)) / (mean(x^2) - (mean(x))^2)
+beta0_est = mean(y) - beta1_est*mean(x)
+y_est = beta1_est*x + beta0_est
+R2 = 1 - sum((y - y_est)^2)/sum((y - mean(y))^2)
+plot(x, y, xlab = 'Wydatki (tys. zł)', ylab = 'Wartość sprzedaży (mln zł)')
+arg = c(min(x), max(x))
+out = beta1_est*arg + beta0_est
+lines(arg, out, col = 'red')
+grid()
+```
+```{r}
+x_new = c(300, 500, 700)
+y_new = beta1_est*x_new + beta0_est
 
+n = length(x)
+y_est = coef(lm_res)[2]*x + coef(lm_res)[1]
+s2 = 1/(n - 2)*sum((y - y_est)^2)
+s2_y_new = s2*( 1 + 1/n + (mean(x) - x_new)^2/(n*(mean(x^2) - mean(x)^2)) )
+s_y_new = sqrt(s2_y_new)
+s2_y_new 
+```
+```{r}
+lm_res2 = lm(y~I(x^2))
+summary(lm_res2)
+
+R22 = summary(lm_res2)$r.squared
+plot(x, y, xlab = 'Wydatki (tys. zł)', ylab = 'Wartość sprzedaży (mln zł)')
+arg = seq(min(x), max(x), by = 1)
+y_est = coef(lm_res)[2]*arg + coef(lm_res)[1]
+y_est2 = coef(lm_res2)[2]*arg^2 + coef(lm_res2)[1]
+lines(arg, y_est, col = 'red')
+lines(arg, y_est2, col = 'blue')
+grid()
+legend('topleft', c('liniowa', 'kwadratowa'), col = c('red', 'blue'), lwd = 1)
+```
 ***
