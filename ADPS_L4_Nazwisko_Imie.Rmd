@@ -211,7 +211,7 @@ grid()
 ```{r}
 x_new = c(300, 500, 700)
 y_new = beta1_est*x_new + beta0_est
-
+y_new
 n = length(x)
 y_est = coef(lm_res)[2]*x + coef(lm_res)[1]
 s2 = 1/(n - 2)*sum((y - y_est)^2)
@@ -228,6 +228,7 @@ plot(x, y, xlab = 'Wydatki (tys. zł)', ylab = 'Wartość sprzedaży (mln zł)')
 arg = seq(min(x), max(x), by = 1)
 y_est = coef(lm_res)[2]*arg + coef(lm_res)[1]
 y_est2 = coef(lm_res2)[2]*arg^2 + coef(lm_res2)[1]
+R2 = 1 - sum((y - y_est)^2)/sum((y - mean(y))^2)
 lines(arg, y_est, col = 'red')
 lines(arg, y_est2, col = 'blue')
 grid()
